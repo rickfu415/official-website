@@ -1,0 +1,166 @@
+服务器部署完整步骤
+以下是在阿里云服务器上部署您的网站的完整步骤，包括构建、配置和启动服务：
+1. 准备代码
+
+# 登录服务器
+ssh root@47.108.105.139
+
+# 创建或进入项目目录
+mkdir -p /websites
+cd /websites
+
+# 克隆代码（如果已有代码，先备份本地修改）
+git stash  # 如果有本地修改
+git pull   # 更新代码
+# 或者重新克隆
+git clone git@github.com:rickfu415/official-website.git
+cd official-website
+
+2. 构建前端项目
+
+# 进入客户端目录
+cd client
+
+# 安装依赖
+npm install
+
+# 构建项目
+npm run build
+
+# 确认构建成功，检查dist目录
+ls -la dist
+
+3. 配置服务器
+
+# 回到项目根目录
+cd ..
+
+# 创建或编辑server.js文件
+vi server.js
+
+将以下内容添加到server.js：
+
+const express = require('express');
+const path = require('path');
+const app = express();
+
+// 静态文件服务
+app.use(express.static(path.join(__dirname, 'client/dist')));
+
+// 所有路由都返回index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client/dist/index.html'));
+});
+
+const PORT = 3001;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
+4. 安装服务器依赖
+
+# 确保package.json存在
+vi package.json
+
+如果不存在或需要修改，添加以下内容：
+
+{
+  "name": "official-website",
+  "version": "1.0.0",
+  "description": "Food website",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
+
+npm install
+
+5. 使用PM2启动服务
+
+# 安装PM2（如果尚未安装）
+npm install -g pm2
+
+# 停止之前的实例（如果有）
+pm2 stop foooodis
+pm2 delete foooodis
+
+# 启动新的实例
+pm2 start server.js --name "foooodis"
+
+# 设置开机自启
+pm2 startup
+pm2 save
+
+# 检查状态
+pm2 list
+pm2 logs foooodis
+
+6. 配置Nginx
+
+# 编辑Nginx配置
+sudo vi /etc/nginx/conf.d/foooodis.conf
+
+server {
+    listen 80;
+    server_name foooodis.com www.foooodis.com;
+
+    location / {
+        proxy_pass http://localhost:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+# 测试Nginx配置
+sudo nginx -t
+
+# 如果测试通过，重新加载Nginx
+sudo nginx -s reload
+
+7. 配置SSL证书（可选但推荐）
+
+# 安装certbot
+sudo yum install certbot python3-certbot-nginx
+
+# 获取证书
+sudo certbot --nginx -d foooodis.com -d www.foooodis.com
+
+按照提示完成配置。
+8. 测试网站
+在浏览器中访问 www.foooodis.com 确认网站正常运行。
+9. 故障排查
+如果网站无法访问：
+pm2 list
+pm2 logs foooodis
+
+# 检查Nginx日志
+sudo tail -f /var/log/nginx/error.log
+sudo tail -f /var/log/nginx/access.log
+
+# 检查防火墙
+sudo firewall-cmd --list-all
+
+# 检查端口是否在监听
+netstat -tulpn | grep 3001
+
+10. 更新网站
+# 进入项目目录
+cd /websites/official-website
+
+# 拉取最新代码
+git pull
+
+# 重新构建前端
+cd client
+npm install
+npm run build
+cd ..
+
+# 重启服务
+pm2 restart foooodis
