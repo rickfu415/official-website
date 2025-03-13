@@ -1,6 +1,5 @@
 import React from "react";
-import { Container, Row, Col, Button } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Row, Col, Button } from "react-bootstrap";
 import heroImage from "../assets/hero/hero-1.jpg";
 import dish1 from "../assets/dishes/dish-1.jpg";
 import dish2 from "../assets/dishes/dish-2.jpg";
@@ -9,9 +8,9 @@ import storyImage from "../assets/brand/story.jpg";
 
 const Home: React.FC = () => {
   const dishes = [
-    { id: 1, image: dish1, name: "火腿咸香", desc: "精选食材，独特工艺" },
-    { id: 2, image: dish2, name: "特色奶茶", desc: "精选食材，独特工艺" },
-    { id: 3, image: dish3, name: "特色奶茶", desc: "精选食材，独特工艺" },
+    { id: 1, image: dish1, name: "口袋三明治", desc: "外酥里嫩，层次丰富" },
+    { id: 2, image: dish2, name: "特色饮品", desc: "清爽解腻，回味甘甜" },
+    { id: 3, image: dish3, name: "精选套餐", desc: "搭配均衡，超值优惠" },
   ];
 
   return (
@@ -36,8 +35,7 @@ const Home: React.FC = () => {
           <h1 className="display-3 fw-bold mb-4">美味传承，品质至上</h1>
           <p className="lead mb-4">精选食材，用心制作，为您带来极致美食体验</p>
           <Button
-            as={Link}
-            to="/menu"
+            href="/menu"
             variant="primary"
             size="lg"
             className="rounded-pill px-5 py-3 me-3"
@@ -45,8 +43,7 @@ const Home: React.FC = () => {
             浏览菜单
           </Button>
           <Button
-            as={Link}
-            to="/order"
+            href="/order"
             variant="outline-light"
             size="lg"
             className="rounded-pill px-5 py-3"
@@ -163,8 +160,7 @@ const Home: React.FC = () => {
               加入我们的大家庭，共同打造餐饮业的新标杆
             </p>
             <Button
-              as={Link}
-              to="/franchise"
+              href="/franchise"
               variant="primary"
               size="lg"
               className="rounded-pill px-5 py-3"

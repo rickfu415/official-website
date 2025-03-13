@@ -1,8 +1,22 @@
 import React, { useState } from "react";
-import { Container, Row, Col, Nav } from "react-bootstrap";
+import { Row, Col, Nav } from "react-bootstrap";
+
+// 定义菜品类型接口
+interface MenuItem {
+  id: string;
+  name: string;
+  description: string;
+  price?: string; // 使用可选属性
+  image: string;
+}
+
+// 定义菜单数据类型
+interface MenuData {
+  [key: string]: MenuItem[];
+}
 
 // 菜单数据
-const menuData = {
+const menuData: MenuData = {
   all: [
     {
       id: "all1",

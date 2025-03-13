@@ -92,7 +92,7 @@ const About: React.FC = () => {
       </section>
 
       {/* 企业文化 */}
-      <section className="mb-5">
+      <section>
         <h2 className="text-center mb-4">企业文化</h2>
         <Row>
           <Col md={4}>
@@ -125,31 +125,6 @@ const About: React.FC = () => {
                 </div>
                 <Card.Title>核心价值观</Card.Title>
                 <Card.Text>诚信、创新、品质、共赢</Card.Text>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </section>
-
-      {/* 联系我们 */}
-      <section>
-        <h2 className="text-center mb-4">联系我们</h2>
-        <Row className="justify-content-center">
-          <Col md={8}>
-            <Card className="contact-card">
-              <Card.Body>
-                <Row>
-                  <Col md={6}>
-                    <h5>商务合作</h5>
-                    <p>电话：15982162404</p>
-                    <p>邮箱：business@example.com</p>
-                  </Col>
-                  <Col md={6}>
-                    <h5>加盟咨询</h5>
-                    <p>电话：15328004919</p>
-                    <p>邮箱：franchise@example.com</p>
-                  </Col>
-                </Row>
               </Card.Body>
             </Card>
           </Col>
