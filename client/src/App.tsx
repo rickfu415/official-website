@@ -13,6 +13,7 @@ import Menu from "./pages/Menu";
 import Stores from "./pages/Stores";
 import Franchise from "./pages/Franchise";
 import About from "./pages/About";
+import GroupPortal from "./pages/GroupPortal";
 
 // 临时页面组件
 const Order = () => (
@@ -42,6 +43,7 @@ const App: React.FC = () => {
             <Route path="/stores" element={<Stores />} />
             <Route path="/franchise" element={<Franchise />} />
             <Route path="/about" element={<About />} />
+            <Route path="/group-portal" element={<GroupPortal />} />
             <Route path="/order" element={<Order />} />
             <Route path="/admin" element={<Admin />} />
           </Routes>

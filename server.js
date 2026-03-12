@@ -19,6 +19,10 @@ const staticPath = path.join(__dirname, "client/dist");
 console.log("Serving static files from:", staticPath);
 app.use(express.static(staticPath));
 
+// 提供 temp_pages 目录中的 HTML 文件
+const tempPagesPath = path.join(__dirname, "client/src/pages/temp_pages");
+app.use("/temp_pages", express.static(tempPagesPath));
+
 // 所有路由都返回 index.html
 app.get("*", (req, res) => {
   const indexPath = path.join(__dirname, "client/dist/index.html");

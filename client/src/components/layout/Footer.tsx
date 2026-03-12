@@ -84,6 +84,17 @@ const Footer: React.FC = () => {
                 <i className="fas fa-handshake me-2 text-primary"></i>
                 <span className="text-light-gray">商务合作与加盟咨询</span>
               </li>
+              <li className="mb-3 d-flex align-items-center">
+                <a
+                  href="/group-portal.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-light-gray text-decoration-none hover-white d-flex align-items-center"
+                >
+                  <i className="fas fa-building me-2 text-primary"></i>
+                  <span>集团入口</span>
+                </a>
+              </li>
             </ul>
           </Col>
 

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>集团入口</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(135deg, #0f1725 0%, #1a2332 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hero {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      text-align: center;
+      color: white;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 8vw, 4rem);
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .hero p {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      opacity: 0.9;
+    }
+
+    .portals {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      gap: 30px;
+      flex-wrap: wrap;
+    }
+
+    .portal-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid;
+      border-radius: 12px;
+      padding: 30px;
+      width: 100%;
+      max-width: 350px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      text-decoration: none;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .portal-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 26px rgba(0, 0, 0, 0.3);
+    }
+
+    .portal-card.blue {
+      border-color: #8FB7FF;
+    }
+
+    .portal-card.blue:hover {
+      background: rgba(143, 183, 255, 0.1);
+    }
+
+    .portal-card.red {
+      border-color: #E63329;
+    }
+
+    .portal-card.red:hover {
+      background: rgba(230, 51, 41, 0.1);
+    }
+
+    .portal-icon {
+      font-size: 3rem;
+    }
+
+    .portal-card.blue .portal-icon {
+      color: #8FB7FF;
+    }
+
+    .portal-card.red .portal-icon {
+      color: #E63329;
+    }
+
+    .portal-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .portal-desc {
+      font-size: 0.95rem;
+      opacity: 0.85;
+      line-height: 1.5;
+    }
+
+    .portal-button {
+      margin-top: auto;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 1rem;
+    }
+
+    .portal-card.blue .portal-button {
+      background: #8FB7FF;
+      color: #0f1725;
+    }
+
+    .portal-card.blue .portal-button:hover {
+      background: #a8c2e8;
+    }
+
+    .portal-card.red .portal-button {
+      background: #E63329;
+      color: white;
+    }
+
+    .portal-card.red .portal-button:hover {
+      background: #d41f1f;
+    }
+
+    @media (max-width: 768px) {
+      .portals {
+        flex-direction: column;
+      }
+
+      .portal-card {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <div>
+      <h1>集团入口</h1>
+      <p>探索我们的核心技术与战略方向</p>
+    </div>
+  </div>
+
+  <div class="portals">
+    <a href="/temp_pages/TPS仿真简介.html" target="_blank" class="portal-card blue">
+      <div class="portal-icon">
+        <i class="fas fa-rocket"></i>
+      </div>
+      <div class="portal-title">TPS 深度研究与仿真生态</div>
+      <div class="portal-desc">热防护系统（TPS）从物理机制到求解器生态的完整分析</div>
+      <button class="portal-button">进入 <i class="fas fa-arrow-right" style="margin-left: 8px;"></i></button>
+    </a>
+
+    <a href="/temp_pages/锐洋科技.html" target="_blank" class="portal-card red">
+      <div class="portal-icon">
+        <i class="fas fa-chart-line"></i>
+      </div>
+      <div class="portal-title">锐洋科技 · 技术战略路线图</div>
+      <div class="portal-desc">物理 AI、CAE 平台与敏捷智造的三位一体战略</div>
+      <button class="portal-button">进入 <i class="fas fa-arrow-right" style="margin-left: 8px;"></i></button>
+    </a>
+  </div>
+</body>
+</html>
+

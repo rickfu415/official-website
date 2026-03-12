@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TPS 深度研究与仿真生态</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#f7f5f1;--ink:#111;--muted:#666;--line:#ddd6cb;--accent:#c94331;--card:#ffffffcc;--soft:#fff8f5}
+
+    /* ── Password Protection ── */
+    #password-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(135deg, #0f1725 0%, #1a2332 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      opacity: 1;
+      transition: opacity 0.5s ease;
+    }
+
+    #password-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .password-box {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: clamp(2rem, 5vw, 3rem);
+      width: min(400px, 90vw);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(10px);
+    }
+
+    .password-box h2 {
+      color: #F4F7FB;
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 700;
+      margin: 0 0 0.5em 0;
+      text-align: center;
+    }
+
+    .password-box p {
+      color: rgba(235, 241, 250, 0.7);
+      font-size: clamp(0.9rem, 2vw, 1rem);
+      margin: 0 0 1.5em 0;
+      text-align: center;
+    }
+
+    .password-input {
+      width: 100%;
+      padding: 0.9em 1.2em;
+      font-size: clamp(1rem, 2.5vw, 1.1rem);
+      font-family: "Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: #F4F7FB;
+      outline: none;
+      transition: all 0.3s ease;
+      box-sizing: border-box;
+    }
+
+    .password-input:focus {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: #8FB7FF;
+      box-shadow: 0 0 0 3px rgba(143, 183, 255, 0.15);
+    }
+
+    .password-input::placeholder {
+      color: rgba(235, 241, 250, 0.4);
+    }
+
+    .password-submit {
+      width: 100%;
+      padding: 0.9em 1.2em;
+      margin-top: 1em;
+      font-size: clamp(1rem, 2.5vw, 1.1rem);
+      font-family: "Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+      font-weight: 700;
+      background: #8FB7FF;
+      color: #0f1725;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      letter-spacing: 0.05em;
+    }
+
+    .password-submit:hover {
+      background: #a8c2e8;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(143, 183, 255, 0.3);
+    }
+
+    .password-submit:active {
+      transform: translateY(0);
+    }
+
+    .password-error {
+      color: #ff6b6b;
+      font-size: clamp(0.85rem, 2vw, 0.95rem);
+      margin-top: 0.8em;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .password-error.show {
+      opacity: 1;
+    }
+
+    #main-content {
+      display: none;
+    }
+
+    #main-content.unlocked {
+      display: block;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+      20%, 40%, 60%, 80% { transform: translateX(8px); }
+    }
+    html,body{height:100%;background:var(--bg);color:var(--ink);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;scroll-snap-type:y mandatory;scroll-behavior:smooth}
+    .slide{min-height:100vh;height:100dvh;padding:48px 6vw;display:flex;flex-direction:column;justify-content:center;gap:18px;scroll-snap-align:start;position:relative}
+    h1{font-size:clamp(2.6rem,6vw,5rem);line-height:1.02}
+    h2{font-size:clamp(1.8rem,3.4vw,3rem);line-height:1.1}
+    h3{font-size:1.06rem}
+    p,li{font-size:clamp(1rem,1.12vw,1.12rem);line-height:1.68;color:var(--muted)}
+    ul{padding-left:1.1em}
+    .eyebrow{font-size:.88rem;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:700}
+    .rule{width:72px;height:3px;background:var(--accent)}
+    .num{position:absolute;right:6vw;bottom:28px;font-size:clamp(3rem,8vw,7rem);font-weight:800;color:#00000010}
+    .grid2,.grid3,.kpi,.tableish,.compare{display:grid;gap:16px}
+    .grid2{grid-template-columns:1.1fr .9fr}
+    .grid3{grid-template-columns:repeat(3,1fr)}
+    .kpi{grid-template-columns:repeat(4,1fr)}
+    .tableish{grid-template-columns:1fr 1fr}
+    .compare{grid-template-columns:repeat(4,1fr)}
+    .card,.mini,.hero{background:var(--card);border:1px solid var(--line);border-radius:14px;transition:border-color .22s ease,background .22s ease,transform .22s ease,box-shadow .22s ease}
+    .card{padding:18px}
+    .mini{padding:14px 16px;background:#fff}
+    .hero{padding:18px 20px;border-color:var(--accent);background:#c943310d}
+    .accent{border-color:var(--accent);background:#c9433108}
+    .soft{background:var(--soft)}
+    .k{border-top:2px solid var(--accent);padding-top:10px}
+    .k b,.mini b,.hero b{display:block;color:var(--ink)}
+    .k b{font-size:1.45rem}
+    #nav{position:fixed;right:16px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:9px;z-index:10}
+    .dot{width:7px;height:7px;border-radius:50%;background:#cfc8bd;cursor:pointer}
+    .dot.on{background:var(--accent);transform:scale(1.4)}
+    @media (hover:hover) and (pointer:fine){
+      .card.accent,.mini.accent,.hero.accent{border-color:var(--line);background:var(--card);box-shadow:none;transform:none}
+      .mini.accent{background:#fff}
+      .hero.accent{background:var(--card)}
+      .card.is-active,.mini.is-active,.hero.is-active{border-color:var(--accent);background:#c9433108;transform:translateY(-3px);box-shadow:0 12px 26px rgba(201,67,49,.10)}
+      .hero.is-active{background:#c943310d}
+    }
+    @media (max-width:900px){.slide{height:auto;min-height:100vh}.grid2,.grid3,.kpi,.tableish,.compare{grid-template-columns:1fr}.num{display:none}}
+  </style>
+</head>
+<body>
+
+  <!-- Password Protection Overlay -->
+  <div id="password-overlay">
+    <div class="password-box">
+      <h2>🔒 访问受限</h2>
+      <p>请输入密码以查看内容</p>
+      <input
+        type="password"
+        id="password-input"
+        class="password-input"
+        placeholder="请输入密码"
+        autocomplete="off"
+      >
+      <button id="password-submit" class="password-submit">解锁</button>
+      <div id="password-error" class="password-error">密码错误，请重试</div>
+    </div>
+  </div>
+
+  <!-- Main Content (hidden until unlocked) -->
+  <div id="main-content">
+
+  <div id="nav"></div>
+
+  <section class="slide">
+    <div class="eyebrow">TPS Simulation Landscape</div>
+    <div class="rule"></div>
+    <h1>热防护系统（TPS）</h1>
+    <h2>从物理机制到求解器生态</h2>
+    <p style="max-width:56em">TPS 位于气动热、材料响应、结构完整性与高性能计算的交汇处。理解其物理机制与工程难点，是判断求解器路线、平台能力与未来机会的前提。</p>
+    <div class="num">01</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">1 · 技术对象</div>
+    <div class="rule"></div>
+    <h2>TPS 是飞行器在极端热环境中维持结构完整性的第一道屏障</h2>
+    <div class="grid2">
+      <div class="card accent">
+        <h3>典型任务场景</h3>
+        <ul>
+          <li>再入飞行器：Mach 25+，驻点温度可达 2000–3500°C</li>
+          <li>高超声速飞行：Mach 5–8，持续受热更考验寿命</li>
+          <li>发动机热端与前缘热点：局部热流密度极高</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>主要类型</h3>
+        <ul>
+          <li>被动式：隔热、储热、辐射散热</li>
+          <li>烧蚀式：通过热解、退移和质量损失消耗热量</li>
+          <li>主动式：再生冷却、膜冷却、发汗冷却</li>
+          <li>可重复使用式：陶瓷瓦、隔热毯、CMC 热结构</li>
+        </ul>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="k"><b>CMC</b><p>适合中高温长期服役</p></div>
+      <div class="k"><b>C/C</b><p>超高温强，但依赖抗氧化设计</p></div>
+      <div class="k"><b>UHTC</b><p>前缘与头锥热点材料</p></div>
+      <div class="k"><b>PICA</b><p>高热流一次性防护代表</p></div>
+    </div>
+    <div class="num">02</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">2 · 核心物理</div>
+    <div class="rule"></div>
+    <h2>TPS 不是单纯“算温度”，而是流动、化学、传热和结构的动态耦合</h2>
+    <div class="tableish">
+      <div class="mini"><b>气动加热</b><p>激波、边界层、真实气体与辐射共同决定表面热流。</p></div>
+      <div class="mini"><b>热-化学耦合</b><p>热解、碳化、氧化和表面反应会不断改变边界条件。</p></div>
+      <div class="mini"><b>流-固反馈</b><p>烧蚀退移、凹坑与粗糙度变化会反过来影响流场和局部热流。</p></div>
+      <div class="mini"><b>热-力响应</b><p>温差与材料退化共同触发热应力、开裂、剥落与疲劳。</p></div>
+    </div>
+    <div class="grid2">
+      <div class="card accent">
+        <h3>烧蚀三区模型</h3>
+        <ul>
+          <li><b>炭化区</b>：承担高温并发生氧化/升华</li>
+          <li><b>热解区</b>：树脂分解并释放热解气体</li>
+          <li><b>原始材料区</b>：保持较低温度以保护冷面结构</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>设计含义</h3>
+        <ul>
+          <li>表面辐射是第一层散热</li>
+          <li>热解和退移消耗极端热流</li>
+          <li>内部导热最终决定背温与结构裕度</li>
+        </ul>
+      </div>
+    </div>
+    <div class="num">03</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">3 · 建模路线</div>
+    <div class="rule"></div>
+    <h2>工程上通常采用“CFD → 材料热响应 → 结构分析”的分层流程</h2>
+    <div class="grid3">
+      <div class="card accent"><h3>CFD 气动热</h3><p>处理强激波、真实气体、湍流、催化与辐射，输出热流和压力边界。</p></div>
+      <div class="card"><h3>材料热响应</h3><p>计算温度场、热解、组分输运、烧蚀退移与多孔介质内气体运动。</p></div>
+      <div class="card"><h3>结构热响应</h3><p>评估背温、热应力、分层、开裂与热循环可靠性。</p></div>
+    </div>
+    <div class="compare">
+      <div class="mini soft"><b>弱耦合</b><p>流程成熟、稳健、最常见。</p></div>
+      <div class="mini soft"><b>强耦合</b><p>物理更真实，但实现复杂。</p></div>
+      <div class="mini soft"><b>关键难点</b><p>收敛性、网格形变与 Jacobian 构造。</p></div>
+      <div class="mini soft"><b>现实选择</b><p>大多数工程项目仍以弱耦合为主。</p></div>
+    </div>
+    <div class="num">04</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">4 · 工程挑战</div>
+    <div class="rule"></div>
+    <h2>真正难的不是建模本身，而是在不确定性与数据稀缺条件下做设计决策</h2>
+    <div class="tableish">
+      <div class="mini"><b>UQ</b><p>转捩、材料参数、反应速率与厚度公差都会显著放大背温误差。</p></div>
+      <div class="mini"><b>多保真融合</b><p>飞行和风洞数据少，工程经验与低保真估算多，必须融合使用。</p></div>
+      <div class="mini"><b>V&V</b><p>TPS 工具必须通过 Verification + Validation 才能真正进入设计闭环。</p></div>
+      <div class="mini"><b>工程现实</b><p>材料数据库专有、试验昂贵、任务窗口短，快速可验证仿真尤为关键。</p></div>
+    </div>
+    <div class="kpi">
+      <div class="k"><b>MC</b><p>直接做高保真 UQ 成本过高</p></div>
+      <div class="k"><b>代理模型</b><p>常带来 100–1000 倍加速</p></div>
+      <div class="k"><b>V&V</b><p>决定模型是否可进入工程</p></div>
+      <div class="k"><b>核心矛盾</b><p>精度、速度、成本难以同时最优</p></div>
+    </div>
+    <div class="num">05</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">5 · 工具栈</div>
+    <div class="rule"></div>
+    <h2>从这里开始，问题自然转向：谁在真正求解 TPS 的核心问题</h2>
+    <div class="grid3">
+      <div class="card accent">
+        <h3>CFD 代码</h3>
+        <p>STAR-CCM+、Fluent、US3D、DPLR、LAURA、Eilmer 等负责气动热边界。</p>
+      </div>
+      <div class="card">
+        <h3>结构 / 热平台</h3>
+        <p>ABAQUS、ANSYS Mechanical、COMSOL 等强在热-结构与工程集成。</p>
+      </div>
+      <div class="card">
+        <h3>专用 TPS 求解器</h3>
+        <p>FIAT、CHAR、PATO、Icarus、SPARC、KATS 等才真正深入烧蚀、热解与退移。</p>
+      </div>
+    </div>
+    <div class="hero">
+      <h3>核心问题</h3>
+      <p>真正值得关注的，不是谁能完成单点计算，而是谁能够稳定处理<b>烧蚀、热解、退移、耦合与验证</b>这些决定工程可用性的核心问题。</p>
+    </div>
+    <div class="num">06</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">6 · 求解器生态总览</div>
+    <div class="rule"></div>
+    <h2>先进求解器生态可以分为 NASA、开源/学术、政府受限与商业平台四类</h2>
+    <div class="tableish">
+      <div class="card accent"><h3>NASA 体系</h3><p>FIAT v3、CHAR、Icarus 构成从基准到复杂 3D 的完整路线。</p></div>
+      <div class="card"><h3>开源 / 学术</h3><p>PATO 提升可获取性，CHyPS 推高阶数值，KATS 走向平台化耦合。</p></div>
+      <div class="card"><h3>政府受限</h3><p>SPARC 等代表双向紧耦合前沿，但通常局限于防务与政府体系。</p></div>
+      <div class="card"><h3>商业平台</h3><p>ANSYS、Siemens、SIMULIA 强在流程与集成，但原生烧蚀能力仍不足。</p></div>
+    </div>
+    <div class="kpi">
+      <div class="k"><b>FIAT v3</b><p>全球参考基准</p></div>
+      <div class="k"><b>Icarus</b><p>复杂 3D 与 HPC 方向</p></div>
+      <div class="k"><b>PATO</b><p>最强开放替代路径</p></div>
+      <div class="k"><b>KATS</b><p>最像平台雏形的学术路线</p></div>
+    </div>
+    <div class="num">07</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">7 · NASA 体系</div>
+    <div class="rule"></div>
+    <h2>NASA 形成了从快速 sizing 到工程认证再到下一代 3D 的完整能力链</h2>
+    <div class="compare">
+      <div class="mini"><b>定位</b><p>从基准计算到任务设计再到复杂 3D 的全链条能力。</p></div>
+      <div class="mini"><b>优势</b><p>飞行验证深、材料数据库强、与真实任务闭环最完整。</p></div>
+      <div class="mini"><b>局限</b><p>先进能力获取受限，外部扩散速度有限。</p></div>
+      <div class="mini"><b>适用场景</b><p>认证、返回器设计、载人任务与深空进入任务。</p></div>
+    </div>
+    <div class="grid3">
+      <div class="card accent"><h3>FIAT v3</h3><p>1D 隐式材料响应基准，快、稳，最适合快速权衡与 UQ。</p></div>
+      <div class="card"><h3>CHAR</h3><p>3D 有限元材料响应工具，已进入 Orion 等工程认证流程。</p></div>
+      <div class="card"><h3>Icarus</h3><p>面向复杂几何、非结构网格、现代 HPC 与内置 UQ 的下一代方向。</p></div>
+    </div>
+    <p style="max-width:56em">NASA 的关键价值不只是单个求解器，而是把材料模型、任务经验、飞行验证和工程流程放在同一体系里，因此仍然是全球 TPS 软件的参照中心。</p>
+    <div class="num">08</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">8 · 开源 / 学术体系</div>
+    <div class="rule"></div>
+    <h2>开源解决可获取性，学术界推动更高阶、更强耦合的新路线</h2>
+    <div class="compare">
+      <div class="mini"><b>定位</b><p>开放替代 + 前沿算法与耦合框架验证。</p></div>
+      <div class="mini"><b>优势</b><p>创新快，适合试验新物理、新数值和新耦合。</p></div>
+      <div class="mini"><b>局限</b><p>工程认证与任务闭环积累弱于 NASA 体系。</p></div>
+      <div class="mini"><b>适用场景</b><p>科研、教学、原型开发与开放生态建设。</p></div>
+    </div>
+    <div class="grid3">
+      <div class="card accent"><h3>PATO</h3><p>基于 OpenFOAM 的多孔材料分析工具箱，是当前最成熟的开源 3D 路线。</p></div>
+      <div class="card"><h3>CHyPS</h3><p>基于 DG 的高阶材料响应方向，强调热梯度和界面问题精度。</p></div>
+      <div class="card"><h3>KATS</h3><p>在学术系统里少见地把 CFD、材料响应和结构响应放进同一框架。</p></div>
+    </div>
+    <p style="max-width:56em">如果只看开放性，PATO 最关键；如果看“谁最值得重点跟踪”，KATS 更重要，因为它代表的不是一个点工具，而是一种平台化演进方向。</p>
+    <div class="num">09</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">9 · KATS 重点</div>
+    <div class="rule"></div>
+    <h2>KATS 最值得强调的地方，是它已经接近 TPS 多物理平台雏形</h2>
+    <div class="grid2">
+      <div class="hero">
+        <h3>为什么 KATS 不只是“又一个学术求解器”</h3>
+        <p><b>KATS</b> 已在同一体系内覆盖 <b>CFD、材料响应、结构响应、3D 非结构网格、网格形变、UQ</b>，并与 <b>US3D</b> 完成耦合研究。它讨论的已不只是局部求解精度，而是完整工作台如何组织和扩展。</p>
+      </div>
+      <div class="card accent">
+        <h3>代表能力</h3>
+        <ul>
+          <li>学术体系中少见的 CFD + 材料 + 结构一体化</li>
+          <li>支持耦合 / 非耦合对比与边界演化研究</li>
+          <li>具备已发表的 V&V 结果与参考案例一致性</li>
+          <li>更接近未来可扩展的 TPS 多物理工作台</li>
+        </ul>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="k"><b>US3D</b><p>高超声速流场耦合能力</p></div>
+      <div class="k"><b>3D 网格</b><p>支持复杂几何与形变</p></div>
+      <div class="k"><b>UQ</b><p>走向概率化设计</p></div>
+      <div class="k"><b>平台化</b><p>比点状代码更有延展性</p></div>
+    </div>
+    <div class="num">10</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">10 · 商业体系</div>
+    <div class="rule"></div>
+    <h2>商业平台强在企业流程和数字线程，弱在原生烧蚀求解</h2>
+    <div class="compare">
+      <div class="mini"><b>ANSYS</b><p>Fluent + Mechanical，最接近行业事实标准。</p></div>
+      <div class="mini"><b>Siemens</b><p>STAR-CCM+ + Nastran，强调数字孪生与 PLM。</p></div>
+      <div class="mini"><b>SIMULIA</b><p>Abaqus + 3DEXPERIENCE，擅长热机械与应力分析。</p></div>
+      <div class="mini"><b>共同短板</b><p>多缺少原生烧蚀、热解和表面退移核心。</p></div>
+    </div>
+    <div class="tableish">
+      <div class="card accent"><h3>商业平台的真正强项</h3><p>企业级部署、热结构分析、流程集成、协同设计、PLM 和数字线程。</p></div>
+      <div class="card"><h3>典型工作模式</h3><p>CFD 提供热流与压力边界，专用 TPS 工具计算材料退移与背温，结构平台完成热应力和安全评估。</p></div>
+    </div>
+    <p>因此，商业市场真正稀缺的并不是通用 CFD，而是<b>可验证、可获取、可工程化使用的原生 TPS 烧蚀求解能力</b>。</p>
+    <div class="num">11</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">11 · 混合生态</div>
+    <div class="rule"></div>
+    <h2>现实中的 TPS 软件生态，已经是“政府代码 + 商业平台 + 开源工具 + OEM 自研”并存</h2>
+    <div class="tableish">
+      <div class="mini"><b>政府 / 研究机构</b><p>NASA Ames、NASA JSC、Sandia、DLR、ESA、JAXA 仍是能力源头。</p></div>
+      <div class="mini"><b>主承包商 / OEM</b><p>SpaceX、Lockheed Martin、Boeing、Northrop、Blue Origin 正持续强化内部 TPS 能力。</p></div>
+      <div class="mini"><b>材料与数据库</b><p>Aerojet、Amorim、Toray 等控制关键材料、工艺和参数数据。</p></div>
+      <div class="mini"><b>工程服务</b><p>ATA、Jacobs 等把标定、咨询与仿真流程工程化。</p></div>
+    </div>
+    <div class="hero">
+      <h3>生态结论</h3>
+      <p>TPS 不是一个“单软件包打天下”的市场，真正可落地的方案通常都是<b>多工具混合工作流</b>。这也解释了为什么平台整合能力会越来越重要。</p>
+    </div>
+    <div class="num">12</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">12 · 前沿趋势</div>
+    <div class="rule"></div>
+    <h2>下一阶段竞争焦点，将集中在更强耦合、更快 UQ 和新材料/新制造适配</h2>
+    <div class="grid2">
+      <div class="card accent">
+        <h3>技术前沿</h3>
+        <ul>
+          <li>双向紧耦合 CFD-烧蚀</li>
+          <li>机器学习替代模型与毫秒级 UQ</li>
+          <li>微结构分辨烧蚀仿真</li>
+          <li>辐射-烧蚀全耦合</li>
+          <li>增材制造 TPS 的各向异性建模</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>产业驱动</h3>
+        <ul>
+          <li>商业航天与再入任务增长</li>
+          <li>高超声速防务项目持续投入</li>
+          <li>深空探测要求更复杂的定制 TPS</li>
+          <li>数字孪生与在线健康监测需求上升</li>
+        </ul>
+      </div>
+    </div>
+    <div class="num">13</div>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">Summary · Key Takeaways</div>
+    <div class="rule"></div>
+    <h2>关键判断：TPS 的核心机会，在于把物理、验证与平台化能力真正连起来</h2>
+    <div class="grid2">
+      <div class="card accent">
+        <h3>技术判断</h3>
+        <ul>
+          <li>TPS 的物理复杂性，决定了它天然需要专用求解器</li>
+          <li>NASA 仍是验证和任务经验最完整的标杆体系</li>
+          <li>KATS 代表最值得跟踪的学术平台化路线之一</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>产业判断</h3>
+        <ul>
+          <li>商业平台强在流程，不足在原生烧蚀核心</li>
+          <li>市场缺口是“可验证、可获取、可工程化”的 TPS 平台</li>
+          <li>最有价值的能力组合是：<b>快、准、可验证、可集成</b></li>
+        </ul>
+      </div>
+    </div>
+    <p style="max-width:56em">今天的 TPS 竞争格局，本质上是由物理复杂性、验证门槛、材料数据壁垒和工程集成需求共同塑造出来的。因此，真正稀缺的不是单一代码，而是能够支撑完整设计闭环的平台能力。</p>
+    <div class="num">14</div>
+  </section>
+
+  </div>
+  <!-- End of main-content -->
+
+  <script>
+    /* ── Password Protection ── */
+    (function () {
+      // 设置你的密码（可以修改这里）
+      const CORRECT_PASSWORD = 'ryyh2025';
+
+      const overlay = document.getElementById('password-overlay');
+      const mainContent = document.getElementById('main-content');
+      const passwordInput = document.getElementById('password-input');
+      const submitBtn = document.getElementById('password-submit');
+      const errorMsg = document.getElementById('password-error');
+
+      // 检查是否已经解锁（使用sessionStorage，关闭浏览器后需要重新输入）
+      if (sessionStorage.getItem('unlocked') === 'true') {
+        unlock();
+      }
+
+      function checkPassword() {
+        const inputPassword = passwordInput.value;
+
+        if (inputPassword === CORRECT_PASSWORD) {
+          sessionStorage.setItem('unlocked', 'true');
+          unlock();
+        } else {
+          // 显示错误信息
+          errorMsg.classList.add('show');
+          passwordInput.value = '';
+          passwordInput.focus();
+
+          // 添加抖动效果
+          passwordInput.style.animation = 'shake 0.5s';
+          setTimeout(() => {
+            passwordInput.style.animation = '';
+          }, 500);
+
+          // 3秒后隐藏错误信息
+          setTimeout(() => {
+            errorMsg.classList.remove('show');
+          }, 3000);
+        }
+      }
+
+      function unlock() {
+        overlay.classList.add('hidden');
+        mainContent.classList.add('unlocked');
+
+        // 完全移除overlay以避免影响性能
+        setTimeout(() => {
+          overlay.style.display = 'none';
+        }, 500);
+      }
+
+      // 点击按钮提交
+      submitBtn.addEventListener('click', checkPassword);
+
+      // 按Enter键提交
+      passwordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          checkPassword();
+        }
+      });
+
+      // 页面加载时聚焦输入框
+      if (sessionStorage.getItem('unlocked') !== 'true') {
+        setTimeout(() => passwordInput.focus(), 100);
+      }
+    })();
+  </script>
+
+  <script>
+    const slides=[...document.querySelectorAll('.slide')],nav=document.getElementById('nav');
+    slides.forEach((s,i)=>{const d=document.createElement('div');d.className='dot'+(i===0?' on':'');d.onclick=()=>s.scrollIntoView({behavior:'smooth'});nav.appendChild(d)});
+    const dots=[...document.querySelectorAll('.dot')];
+    const io=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;const i=slides.indexOf(e.target);dots.forEach((d,n)=>d.classList.toggle('on',n===i));}),{threshold:.55});
+    slides.forEach(s=>io.observe(s));
+  </script>
+  <script>
+    (function(){
+      if(!window.matchMedia('(hover:hover) and (pointer:fine)').matches)return;
+      ['.card','.mini','.hero'].forEach(selector=>{
+        const groups=new Map();
+        document.querySelectorAll(selector).forEach(item=>{
+          const parent=item.parentElement;
+          if(!parent)return;
+          if(!groups.has(parent))groups.set(parent,[]);
+          groups.get(parent).push(item);
+        });
+        groups.forEach(items=>{
+          if(items.length<2)return;
+          items.forEach(item=>item.addEventListener('pointerenter',()=>{
+            items.forEach(el=>el.classList.toggle('is-active',el===item));
+          }));
+          items[0].parentElement.addEventListener('pointerleave',()=>{
+            items.forEach(el=>el.classList.remove('is-active'));
+          });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
