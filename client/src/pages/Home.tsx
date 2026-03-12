@@ -38,7 +38,8 @@ const Home: React.FC = () => {
             href="/menu"
             variant="primary"
             size="lg"
-            className="rounded-pill px-5 py-3 me-3"
+            className="rounded-pill px-5 py-3 me-3 mb-2 mb-sm-0"
+            style={{ minWidth: "160px" }}
           >
             浏览菜单
           </Button>
@@ -47,6 +48,7 @@ const Home: React.FC = () => {
             variant="outline-light"
             size="lg"
             className="rounded-pill px-5 py-3"
+            style={{ minWidth: "160px" }}
           >
             在线点餐
           </Button>

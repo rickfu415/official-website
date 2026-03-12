@@ -35,21 +35,17 @@ const MainNavbar: React.FC = () => {
               <Nav.Link href="/about" className="mx-2">
                 关于我们
               </Nav.Link>
+              <Nav.Link href="/admin/login" className="mx-2 text-primary">
+                登录
+              </Nav.Link>
             </Nav>
             <Nav>
               <Button
                 href="/order"
                 variant="primary"
-                className="rounded-pill px-4 me-2"
-              >
-                在线点餐
-              </Button>
-              <Button
-                href="/admin"
-                variant="outline-primary"
                 className="rounded-pill px-4"
               >
-                登录
+                在线点餐
               </Button>
             </Nav>
           </Navbar.Collapse>
